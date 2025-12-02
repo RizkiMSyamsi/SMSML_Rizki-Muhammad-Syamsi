@@ -1,1 +1,13 @@
-Eksperimen_SML_Rizki Muhammad Syamsi/preprocessing/Sales Transaction v.4a_preprocessing.csv
+# ==============================
+# Dataset besar
+# ==============================
+**/Sales Transaction v.4a_preprocessing.csv
+
+# ==============================
+# MLflow files & folders
+# ==============================
+**/mlruns/
+**/mlflow.db
+**/mlflow.sqlite
+*.db
+*.sqlite
