@@ -1,33 +1,42 @@
-name: MLflow CI Training
+name: MLflow CI Training & Docker Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
-  train:
+  train-and-build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Install MLflow
-        run: |
-          pip install mlflow
+        run: pip install mlflow==3.6.0
 
-      - name: Run MLflow Project
+      - name: Run MLflow Project & Build Docker Image
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          mlflow run MLProject
+          cd MLProject
+          mlflow run . --build-image
 
-      - name: Upload artifacts
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          docker push rizkimsyamsi/sales-mlflow-project:latest
+
+      - name: Upload MLflow artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: trained-model
-          path: MLProject/artifacts
+          name: mlflow-artifacts
+          path: MLProject/mlruns

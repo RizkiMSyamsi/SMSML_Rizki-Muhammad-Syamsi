@@ -2,6 +2,9 @@ name: sales-mlflow-project
 
 conda_env: conda.yaml
 
+docker_env:
+  image: rizkimsyamsi/sales-mlflow-project:latest  # ganti dengan username Docker Hub Anda
+
 entry_points:
   main:
     command: "python modelling.py"
