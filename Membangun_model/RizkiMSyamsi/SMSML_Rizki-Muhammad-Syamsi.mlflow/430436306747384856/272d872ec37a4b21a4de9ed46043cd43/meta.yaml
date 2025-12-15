@@ -1,0 +1,14 @@
+artifact_uri: file:D:/Kuliah/Semester 7/Asah/Tugas Project/SMSML_Rizki-Muhammad-Syamsi/Membangun_model/RizkiMSyamsi/SMSML_Rizki-Muhammad-Syamsi.mlflow/430436306747384856/272d872ec37a4b21a4de9ed46043cd43/artifacts
+end_time: 1764653923247
+entry_point_name: ''
+experiment_id: '430436306747384856'
+lifecycle_stage: active
+run_id: 272d872ec37a4b21a4de9ed46043cd43
+run_name: Ridge Regression - GridSearch
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764653916085
+status: 3
+tags: []
+user_id: RizkiMSyamsi

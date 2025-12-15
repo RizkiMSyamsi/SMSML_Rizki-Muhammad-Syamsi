@@ -1,75 +1,93 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn
+import os
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 
+# ============================
+# LOCAL MLFLOW CONFIG (SQLite)
+# ============================
 
-# CONFIG
-# Gunakan SQLite sebagai backend MLflow
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Buat / set experiment
-mlflow.set_experiment("Sales_Linear_Regression")
+# File database MLflow (akan dibuat otomatis)
+MLFLOW_DB_PATH = os.path.join(BASE_DIR, "mlflow.db")
 
+# Folder untuk artifacts
+ARTIFACT_ROOT = os.path.join(BASE_DIR, "mlruns")
 
-# LOAD DATA
+# Set tracking URI ke SQLite lokal
+mlflow.set_tracking_uri(f"sqlite:///{MLFLOW_DB_PATH}")
 
-df = pd.read_csv(
-    r"D:\Kuliah\Semester 7\Asah\Tugas Project\SMSML_Rizki-Muhammad-Syamsi\Membangun_model\Sales Transaction v.4a_preprocessing.csv",
-    low_memory=False
-).infer_objects()
+# Set experiment (akan tersimpan di mlflow.db)
+mlflow.set_experiment("Sales - Linear Regression (Local)")
 
+print(" MLflow Tracking URI:", mlflow.get_tracking_uri())
+print(" Artifact location :", ARTIFACT_ROOT)
 
+# ============================
+# LOAD DATA (RELATIVE PATH)
+# ============================
 
+DATA_PATH = os.path.join(BASE_DIR, "Sales Transaction v.4a_preprocessing.csv")
+df = pd.read_csv(DATA_PATH, low_memory=False).infer_objects()
+
+# ============================
 # CLEAN FEATURE & TARGET
+# ============================
 
 # Target
-y = df['TotalValue_scaled']
+y = df["TotalValue_scaled"]
 
-# Drop kolom yang tidak dipakai
-X = df.drop(columns=[
-    'TransactionNo',
-    'Date',
-    'ProductName',
-    'Price_bin',
-    'TotalValue_bin',
-    'TotalValue',
-    'TotalValue_scaled'
-], errors='ignore')
+# Drop kolom yang tidak digunakan
+X = df.drop(
+    columns=[
+        "TransactionNo",
+        "Date",
+        "ProductName",
+        "Price_bin",
+        "TotalValue_bin",
+        "TotalValue",
+        "TotalValue_scaled",
+    ],
+    errors="ignore",
+)
 
-# Ambil kolom numerik saja
-X = X.select_dtypes(include=['int64', 'float64'])
+# Hanya ambil kolom numerik
+X = X.select_dtypes(include=["int64", "float64"])
 
-# Ubah semuanya ke float (hindari warning MLflow)
+# Konversi ke float
 X = X.astype("float64")
 
 # Hilangkan NaN
 X = X.fillna(0)
 
+print(" Feature shape:", X.shape)
 
-
+# ============================
 # SPLIT DATA
+# ============================
+
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
+    X, y,
     test_size=0.2,
     random_state=42
 )
 
-
-
-# AUTLOG MLFLOW
+# ============================
+# MLFLOW AUTOLOG
+# ============================
 
 mlflow.sklearn.autolog()
 
-
-
+# ============================
 # TRAINING
+# ============================
 
-with mlflow.start_run(run_name="Linear Regression - Sales Prediction"):
+with mlflow.start_run(run_name="Linear Regression - Sales Prediction (Local)"):
 
     model = LinearRegression()
     model.fit(X_train, y_train)
@@ -79,13 +97,7 @@ with mlflow.start_run(run_name="Linear Regression - Sales Prediction"):
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    # Log model + signature
-    mlflow.sklearn.log_model(
-        model,
-        "model",
-        input_example=X_train.iloc[:5]
-    )
-
-    print("\n✅ TRAINING SUCCESS")
+    print("\n TRAINING SUCCESS (LOCAL)")
     print("MSE :", mse)
     print("R2  :", r2)
+    print(" Logged to LOCAL MLflow (mlflow.db)")

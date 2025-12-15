@@ -1,0 +1,10 @@
+artifact_location: file:D:/Kuliah/Semester 7/Asah/Tugas Project/SMSML_Rizki-Muhammad-Syamsi/Membangun_model/RizkiMSyamsi/SMSML_Rizki-Muhammad-Syamsi.mlflow/430436306747384856/models/m-e547e9a26185485aa5d2ed715e2ccff0/artifacts
+creation_timestamp: 1764818335630
+experiment_id: '430436306747384856'
+last_updated_timestamp: 1764818338346
+model_id: m-e547e9a26185485aa5d2ed715e2ccff0
+model_type: null
+name: ridge_regression_model
+source_run_id: 2075fbd701454b71b7aea5d647507f4e
+status: 2
+status_message: null

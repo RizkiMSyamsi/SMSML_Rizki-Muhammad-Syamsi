@@ -24,7 +24,9 @@ jobs:
 
       - name: Run preprocessing script
         run: |
-          python preprocessing/automate_Rizki-Muhammad-Syamsi.py
+          python preprocessing/automate_Rizki-Muhammad-Syamsi.py \
+            data/raw/Sales_Transaction_v4a_raw.csv \
+            preprocessing/Sales_Transaction_v4a_preprocessed.csv
 
       - name: Upload preprocessed dataset
         uses: actions/upload-artifact@v4

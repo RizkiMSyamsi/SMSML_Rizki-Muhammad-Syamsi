@@ -1,57 +1,51 @@
+# automate_Rizki-Muhammad-Syamsi.py
+
+import sys
+from pathlib import Path
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-# Fungsi untuk melakukan seluruh tahap preprocessing
-def preprocess_data(df):
-    df_clean = df.copy()  # copy dataframe
-    df_clean.drop_duplicates(inplace=True)  # drop duplikat
-    df_clean['Date'] = pd.to_datetime(df_clean['Date'], errors='coerce')  # convert tanggal
-    df_clean = df_clean.dropna(subset=['Date'])  # drop tanggal invalid
-    df_clean['CustomerNo'] = df_clean['CustomerNo'].fillna("Unknown").astype(str)  # isi missing customer
-    df_clean = df_clean[df_clean['Quantity'] > 0]  # hapus pembatalan
-    df_clean = df_clean[df_clean['Price'] > 0]  # hapus harga salah
-    df_clean['TotalValue'] = df_clean['Price'] * df_clean['Quantity']  # hitung total
+def preprocess_data(input_path: str) -> pd.DataFrame:
+    df = pd.read_csv(input_path)
 
-    def remove_outliers_iqr(df, col):  # hapus outlier dengan IQR
-        Q1, Q3 = df[col].quantile(0.25), df[col].quantile(0.75)
+    df = df.drop_duplicates()
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    df = df.dropna(subset=['Date'])
+    df['CustomerNo'] = df['CustomerNo'].fillna("Unknown").astype(str)
+    df = df[df['Quantity'] > 0]
+    df = df[df['Price'] > 0]
+
+    df['TotalValue'] = df['Price'] * df['Quantity']
+
+    def remove_outliers_iqr(data, col):
+        Q1 = data[col].quantile(0.25)
+        Q3 = data[col].quantile(0.75)
         IQR = Q3 - Q1
-        lower, upper = Q1 - 1.5 * IQR, Q3 + 1.5 * IQR
-        return df[(df[col] >= lower) & (df[col] <= upper)]
+        return data[(data[col] >= Q1 - 1.5 * IQR) &
+                    (data[col] <= Q3 + 1.5 * IQR)]
 
-    for col in ['Price', 'Quantity', 'TotalValue']:  # terapkan outlier removal
-        df_clean = remove_outliers_iqr(df_clean, col)
+    for col in ['Price', 'Quantity', 'TotalValue']:
+        df = remove_outliers_iqr(df, col)
 
-    le_customer = LabelEncoder()  # encode customer
-    df_clean['CustomerNo_enc'] = le_customer.fit_transform(df_clean['CustomerNo'])
+    df['CustomerNo_enc'] = LabelEncoder().fit_transform(df['CustomerNo'])
+    df['ProductNo_enc'] = LabelEncoder().fit_transform(df['ProductNo'])
+    df = pd.get_dummies(df, columns=['Country'])
 
-    le_product = LabelEncoder()  # encode product
-    df_clean['ProductNo_enc'] = le_product.fit_transform(df_clean['ProductNo'])
-
-    df_clean = pd.get_dummies(df_clean, columns=['Country'], prefix='Country')  # one-hot encode country
-
-    scaler = StandardScaler()  # scaling numerik
-    df_clean[['Price_scaled', 'Quantity_scaled', 'TotalValue_scaled']] = scaler.fit_transform(
-        df_clean[['Price', 'Quantity', 'TotalValue']]
+    scaler = StandardScaler()
+    df[['Price_scaled', 'Quantity_scaled', 'TotalValue_scaled']] = scaler.fit_transform(
+        df[['Price', 'Quantity', 'TotalValue']]
     )
 
-    df_clean['Price_bin'] = pd.qcut(df_clean['Price'], q=4, labels=['Very Low', 'Low', 'Medium', 'High'])  # bin price
-    df_clean['TotalValue_bin'] = pd.qcut(df_clean['TotalValue'], q=4, labels=['Very Low', 'Low', 'Medium', 'High'])  # bin total
-
-    le_bin = LabelEncoder()  # encode binning
-    df_clean['Price_bin_enc'] = le_bin.fit_transform(df_clean['Price_bin'])
-    df_clean['TotalValue_bin_enc'] = le_bin.fit_transform(df_clean['TotalValue_bin'])
-
-    return df_clean  # kembalikan dataset akhir
+    df_final = df.select_dtypes(include=['int64', 'float64']).fillna(0)
+    return df_final
 
 
-# ==== BAGIAN PROSES OTOMATIS ====
+if __name__ == "__main__":
+    input_csv = sys.argv[1]
+    output_csv = sys.argv[2]
 
-# Load file raw dataset
-df_raw = pd.read_csv("../Sales Transaction v.4a_raw.csv")  # sesuaikan path
+    df_processed = preprocess_data(input_csv)
+    Path(output_csv).parent.mkdir(parents=True, exist_ok=True)
+    df_processed.to_csv(output_csv, index=False)
 
-# Jalankan preprocessing
-df_processed = preprocess_data(df_raw)
-
-# Simpan output
-df_processed.to_csv("Sales_Transaction_v4a_preprocessed.csv", index=False)
-print("Preprocessing selesai — file disimpan sebagai Sales_Transaction_v4a_preprocessed.csv")
+    print("✅ Preprocessing selesai, file disimpan di:", output_csv)

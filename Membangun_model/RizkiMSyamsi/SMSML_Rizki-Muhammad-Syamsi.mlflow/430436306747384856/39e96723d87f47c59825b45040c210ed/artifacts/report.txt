@@ -1,0 +1,5 @@
+Ridge Regression GridSearch Results
+Best params: {'alpha': 0.01}
+MSE: 0.018101666349170122
+RMSE: 0.13454243326612658
+R2: 0.9818352363162891
